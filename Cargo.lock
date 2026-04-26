@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "occultism"
 version = "0.1.0"
+dependencies = [
+ "shushu",
+]
+
+[[package]]
+name = "shushu"
+version = "0.1.0"

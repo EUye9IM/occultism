@@ -9,13 +9,26 @@
 - **正确性**：穷举验证与属性测试，确保算法与经典文献一致
 - **可扩展**：通过 trait 体系支持多种流派与算法的组合
 
+## 子 crate: shushu
+
+`shushu` 为数术基础子 crate，提供核心数据类型：
+
+| 类型 | 说明 | 主要方法 |
+|---|---|---|
+| `Yinyang` | 阴阳（阴/阳） | `Display` |
+| `Wuxing` | 五行（金木水火土） | `Display`, `sheng()`, `ke()` |
+| `Tiangan` | 十天干（甲～癸） | `Display`, `wuxing()`, `yinyang()`, `ordinal()` |
+| `Dizhi` | 十二地支（子～亥） | `Display`, `wuxing()`, `yinyang()`, `ordinal()`, `shengxiao()` |
+
+这些类型通过根 crate 重导出，可直接 `use occultism::Tiangan` 引入。
+
 ## 功能规划
 
 ### 基础定义
 
-- [ ] 十天干（甲、乙、丙、丁、戊、己、庚、辛、壬、癸）
-- [ ] 十二地支（子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥）
-- [ ] 阴阳与五行（金、木、水、火、土）及其生克关系
+- [x] 十天干（甲、乙、丙、丁、戊、己、庚、辛、壬、癸）
+- [x] 十二地支（子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥）
+- [x] 阴阳与五行（金、木、水、火、土）及其生克关系
 - [ ] 八卦（乾、坤、震、巽、坎、离、艮、兑）与六十四卦
 - [ ] 天干地支的刑、冲、合、害、破等交互关系
 - [ ] 二十四节气
@@ -30,17 +43,24 @@
 
 ```
 occultism/
-├── src/          # 库代码
-├── examples/     # 使用示例
-├── tests/        # 集成测试
-└── Cargo.toml    # 项目配置
+├── Cargo.toml          # workspace 根配置
+├── src/                # occultism crate（入口，重导出子 crate）
+├── shushu/             # 数术子 crate
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs
+│       ├── yinyang.rs     # 阴阳
+│       ├── wuxing.rs      # 五行（含生克）
+│       ├── tiangan.rs     # 十天干
+│       └── dizhi.rs       # 十二地支（含生肖）
+└── README.md
 ```
 
 ## 构建
 
 ```bash
 cargo build
-cargo test
+cargo test --workspace
 ```
 
 ## 许可
