@@ -60,6 +60,22 @@ impl Tiangan {
         }
     }
 
+    pub fn from_ordinal(n: usize) -> Self {
+        match n % 10 {
+            0 => Tiangan::Jia,
+            1 => Tiangan::Yi,
+            2 => Tiangan::Bing,
+            3 => Tiangan::Ding,
+            4 => Tiangan::Wu,
+            5 => Tiangan::Ji,
+            6 => Tiangan::Geng,
+            7 => Tiangan::Xin,
+            8 => Tiangan::Ren,
+            9 => Tiangan::Gui,
+            _ => unreachable!(),
+        }
+    }
+
     pub fn iter() -> impl Iterator<Item = Tiangan> {
         [
             Tiangan::Jia,

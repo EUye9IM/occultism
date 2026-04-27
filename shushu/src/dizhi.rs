@@ -88,6 +88,24 @@ impl Dizhi {
         }
     }
 
+    pub fn from_ordinal(n: usize) -> Self {
+        match n % 12 {
+            0 => Dizhi::Zi,
+            1 => Dizhi::Chou,
+            2 => Dizhi::Yin,
+            3 => Dizhi::Mao,
+            4 => Dizhi::Chen,
+            5 => Dizhi::Si,
+            6 => Dizhi::Wu,
+            7 => Dizhi::Wei,
+            8 => Dizhi::Shen,
+            9 => Dizhi::You,
+            10 => Dizhi::Xu,
+            11 => Dizhi::Hai,
+            _ => unreachable!(),
+        }
+    }
+
     pub fn iter() -> impl Iterator<Item = Dizhi> {
         [
             Dizhi::Zi,
