@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 shushu = { path = "../shushu" }
+time = "0.3"

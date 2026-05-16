@@ -54,9 +54,7 @@ impl Tiangan {
             Tiangan::Jia | Tiangan::Bing | Tiangan::Wu | Tiangan::Geng | Tiangan::Ren => {
                 Yinyang::Yang
             }
-            Tiangan::Yi | Tiangan::Ding | Tiangan::Ji | Tiangan::Xin | Tiangan::Gui => {
-                Yinyang::Yin
-            }
+            Tiangan::Yi | Tiangan::Ding | Tiangan::Ji | Tiangan::Xin | Tiangan::Gui => Yinyang::Yin,
         }
     }
 

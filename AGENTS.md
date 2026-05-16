@@ -29,6 +29,11 @@ Note: `cargo fmt` uses `--all`, not `--workspace` (which is invalid for fmt).
 - **`occultism`** (root crate, `src/lib.rs`) — re-exports shushu types and daliuren. No tests.
 - All real logic and tests live in `shushu/`.
 
+## 交互要求
+
+- Thinking思考过程用中文表述
+- Reply回答也要用中文回复
+
 ## Style & Conventions
 
 - `edition = "2024"` — use postfix `.await`, `unsafe extern`, etc.

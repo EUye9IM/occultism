@@ -226,11 +226,7 @@ pub fn julian_to_gregorian(jd: f64) -> (i32, u8, u8, u8, u8) {
     } else {
         month_e - 13
     } as u8;
-    let year = if month > 2 {
-        c - 4716
-    } else {
-        c - 4715
-    } as i32;
+    let year = if month > 2 { c - 4716 } else { c - 4715 } as i32;
 
     let frac = f - f.floor();
     let hour = (frac * 24.0).floor() as u8;
@@ -396,7 +392,12 @@ mod tests {
         let (y, m, d, _, _) = julian_to_gregorian(jieqi_jd_near(Jieqi::Chunfen, near));
         assert_eq!(y, 2026);
         assert_eq!(m, 3);
-        assert!((20..=21).contains(&d), "春分日应为3月20或21日, got {}/{}", m, d);
+        assert!(
+            (20..=21).contains(&d),
+            "春分日应为3月20或21日, got {}/{}",
+            m,
+            d
+        );
 
         // 2026年夏至: 6月20或21日
         let near = julian_day_number(2026, 6, 18) as f64;
@@ -407,7 +408,12 @@ mod tests {
         let near = julian_day_number(2026, 12, 18) as f64;
         let (_, m, d, _, _) = julian_to_gregorian(jieqi_jd_near(Jieqi::Dongzhi, near));
         assert_eq!(m, 12);
-        assert!((21..=22).contains(&d), "冬至日应为12月21或22日, got {}/{}", m, d);
+        assert!(
+            (21..=22).contains(&d),
+            "冬至日应为12月21或22日, got {}/{}",
+            m,
+            d
+        );
     }
 
     #[test]

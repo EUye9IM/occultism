@@ -164,8 +164,12 @@ mod tests {
 
     #[test]
     fn yinyang() {
-        let yang: Vec<Dizhi> = Dizhi::iter().filter(|d| d.yinyang() == Yinyang::Yang).collect();
-        let yin: Vec<Dizhi> = Dizhi::iter().filter(|d| d.yinyang() == Yinyang::Yin).collect();
+        let yang: Vec<Dizhi> = Dizhi::iter()
+            .filter(|d| d.yinyang() == Yinyang::Yang)
+            .collect();
+        let yin: Vec<Dizhi> = Dizhi::iter()
+            .filter(|d| d.yinyang() == Yinyang::Yin)
+            .collect();
         assert_eq!(yang.len(), 6);
         assert_eq!(yin.len(), 6);
     }
