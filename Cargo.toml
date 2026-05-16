@@ -1,5 +1,5 @@
 [workspace]
-members = ["shushu"]
+members = ["shushu", "daliuren"]
 
 [package]
 name = "occultism"
@@ -8,3 +8,4 @@ edition = "2024"
 
 [dependencies]
 shushu = { path = "shushu" }
+daliuren = { path = "daliuren" }
