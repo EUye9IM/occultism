@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::dizhi::Dizhi;
+use crate::jieqi;
 use crate::tiangan::Tiangan;
 
 /// 十二时辰
@@ -131,12 +132,7 @@ impl Bazi {
     ///
     /// 年柱以立春为界，立春前属上一年
     fn calc_year_pillar(date: time::Date) -> Pillar {
-        let y = date.year();
-        let chinese_year = if is_before_lichun(date) {
-            y - 1
-        } else {
-            y
-        };
+        let (chinese_year, _) = jieqi::month_index_for_date(date);
 
         let stem_idx = (chinese_year - 4).rem_euclid(10) as usize;
         let branch_idx = (chinese_year - 4).rem_euclid(12) as usize;
@@ -149,17 +145,14 @@ impl Bazi {
 
     /// 计算月柱（五虎遁）
     fn calc_month_pillar(date: time::Date) -> Pillar {
-        let y = date.year();
-        let lichun_year = if is_before_lichun(date) { y - 1 } else { y };
-
-        let month_idx = month_index(date);
+        let (chinese_year, month_idx) = jieqi::month_index_for_date(date);
         // month_idx: 1=寅月 ... 12=丑月
 
         // 五虎遁：月干起算
         // 甲己之年丙作首，乙庚之岁戊为头
         // 丙辛之年寻庚上，丁壬壬寅顺水流
         // 若问戊癸何处起，甲寅之上好追求
-        let year_stem_idx = (lichun_year - 4).rem_euclid(10) as usize;
+        let year_stem_idx = (chinese_year - 4).rem_euclid(10) as usize;
         let start_stem_idx = (year_stem_idx * 2 + 2) % 10;
         let stem_idx = (start_stem_idx + month_idx - 1) % 10;
 
@@ -212,58 +205,6 @@ impl Bazi {
             branch: Dizhi::from_ordinal(shichen_idx),
         }
     }
-}
-
-/// 判断日期是否在立春之前
-fn is_before_lichun(date: time::Date) -> bool {
-    let (m, d) = (date.month() as u8, date.day());
-    m < 2 || (m == 2 && d < 4)
-}
-
-/// 获取以立春为界的月份索引（1=寅月 ... 12=丑月）
-fn month_index(date: time::Date) -> usize {
-    let (m, d) = (date.month() as u8, date.day());
-
-    // 12 个"节"的近似日期（月, 日）
-    // 这些日期作为月柱分界的依据
-    const SOLAR_TERMS: [(u8, u8); 12] = [
-        (2, 4),  // 立春 → 寅月
-        (3, 6),  // 惊蛰 → 卯月
-        (4, 5),  // 清明 → 辰月
-        (5, 5),  // 立夏 → 巳月
-        (6, 6),  // 芒种 → 午月
-        (7, 7),  // 小暑 → 未月
-        (8, 7),  // 立秋 → 申月
-        (9, 8),  // 白露 → 酉月
-        (10, 8), // 寒露 → 戌月
-        (11, 7), // 立冬 → 亥月
-        (12, 7), // 大雪 → 子月
-        (1, 6),  // 小寒 → 丑月（次年）
-    ];
-
-    let md = (m, d);
-
-    // 从立春开始，判断日期落在哪个节气区间
-    // 丑月 (小寒~立春前)
-    if (md.0 == 1 && md.1 >= 6) || (md.0 == 2 && md.1 < 4) {
-        return 12;
-    }
-    // 子月 (大雪~小寒前)
-    if (md.0 == 12 && md.1 >= 7) || (md.0 == 1 && md.1 < 6) {
-        return 11;
-    }
-    // 其他月份从立春开始顺推
-    for i in 0..10 {
-        let curr = SOLAR_TERMS[i];
-        let next = SOLAR_TERMS[i + 1];
-        let after_curr = md.0 > curr.0 || (md.0 == curr.0 && md.1 >= curr.1);
-        let before_next = md.0 < next.0 || (md.0 == next.0 && md.1 < next.1);
-        if after_curr && before_next {
-            return i + 1;
-        }
-    }
-
-    12
 }
 
 #[cfg(test)]
@@ -345,20 +286,26 @@ mod tests {
     // 立春前为上年
     #[test]
     fn before_lichun_uses_previous_year() {
-        // 2026-02-03: 立春(2/4)前 → 年柱应为乙巳(2025)
-        let d = date(2026, 2, 3);
+        // 计算 2026 年的立春实际日期
+        let near = jieqi::julian_day_number(2026, 2, 1) as f64;
+        let jd = jieqi::jieqi_jd_near(jieqi::Jieqi::Lichun, near);
+        let (_, _, lichun_day, _, _) = jieqi::julian_to_gregorian(jd);
+        // 立春前一天
+        let d = date(2026, 2, lichun_day - 1);
         let bazi = Bazi::from_date(d, 12, 0);
         assert_eq!(bazi.year_pillar.to_string(), "乙巳");
-        // 月: 小寒(1/6)~立春(2/3) 属丑月
-        // 乙年五虎遁: 戊寅起 → 丑月 = 己丑
+        // 丑月: 乙年五虎遁戊寅起 → 丑月 = 己丑
         assert_eq!(bazi.month_pillar.to_string(), "己丑");
     }
 
     // 立春后为当年
     #[test]
     fn after_lichun_uses_current_year() {
-        // 2026-02-04: 立春当日 → 年柱应为丙午(2026)
-        let d = date(2026, 2, 4);
+        let near = jieqi::julian_day_number(2026, 2, 1) as f64;
+        let jd = jieqi::jieqi_jd_near(jieqi::Jieqi::Lichun, near);
+        let (_, _, lichun_day, _, _) = jieqi::julian_to_gregorian(jd);
+        // 立春当日
+        let d = date(2026, 2, lichun_day);
         let bazi = Bazi::from_date(d, 12, 0);
         assert_eq!(bazi.year_pillar.to_string(), "丙午");
         // 寅月: 丙年五虎遁庚寅起 → 寅月 = 庚寅
@@ -368,13 +315,16 @@ mod tests {
     // 月柱节气边界验证
     #[test]
     fn month_boundary_jingzhe() {
-        // 2026-03-05: 惊蛰(3/6)前 → 卯月前仍是寅月
-        let before = date(2026, 3, 5);
+        // 计算 2026 年惊蛰实际日期
+        let near = jieqi::julian_day_number(2026, 3, 1) as f64;
+        let jd = jieqi::jieqi_jd_near(jieqi::Jieqi::Jingzhe, near);
+        let (_, _, jz_day, _, _) = jieqi::julian_to_gregorian(jd);
+        // 惊蛰前一天 → 寅月
+        let before = date(2026, 3, jz_day - 1);
         let bazi_before = Bazi::from_date(before, 12, 0);
         assert_eq!(bazi_before.month_pillar.to_string(), "庚寅");
-
-        // 2026-03-06: 惊蛰当日 → 卯月
-        let after = date(2026, 3, 6);
+        // 惊蛰当日 → 卯月
+        let after = date(2026, 3, jz_day);
         let bazi_after = Bazi::from_date(after, 12, 0);
         assert_eq!(bazi_after.month_pillar.to_string(), "辛卯");
     }
@@ -382,10 +332,13 @@ mod tests {
     // 子月跨年边界
     #[test]
     fn zi_month_cross_year() {
-        // 2026-01-03: 大雪(12/7)~小寒(1/5) 属子月
-        let d = date(2026, 1, 3);
+        // 2026年小寒实际日期
+        let near = jieqi::julian_day_number(2026, 1, 1) as f64;
+        let jd = jieqi::jieqi_jd_near(jieqi::Jieqi::Xiaohan, near);
+        let (_, _, xh_day, _, _) = jieqi::julian_to_gregorian(jd);
+        // 小寒前两天 → 子月
+        let d = date(2026, 1, xh_day - 2);
         let bazi = Bazi::from_date(d, 12, 0);
-        // 乙巳年(2025), 子月
         assert_eq!(bazi.year_pillar.to_string(), "乙巳");
         // 乙年: 戊寅起, 子月(11) = 戊子
         assert_eq!(bazi.month_pillar.to_string(), "戊子");
@@ -394,12 +347,14 @@ mod tests {
     // 丑月跨年边界
     #[test]
     fn chou_month() {
-        // 2026-01-10: 小寒(1/6)~立春(2/3) 属丑月
-        let d = date(2026, 1, 10);
+        // 2026年小寒实际日期
+        let near = jieqi::julian_day_number(2026, 1, 1) as f64;
+        let jd = jieqi::jieqi_jd_near(jieqi::Jieqi::Xiaohan, near);
+        let (_, _, xh_day, _, _) = jieqi::julian_to_gregorian(jd);
+        // 小寒当日 → 丑月
+        let d = date(2026, 1, xh_day);
         let bazi = Bazi::from_date(d, 12, 0);
-        // 乙巳年
         assert_eq!(bazi.year_pillar.to_string(), "乙巳");
-        // 乙年: 戊寅起, 丑月(12) = 己丑
         assert_eq!(bazi.month_pillar.to_string(), "己丑");
     }
 
